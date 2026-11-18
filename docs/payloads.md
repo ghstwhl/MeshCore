@@ -108,6 +108,7 @@ For the common chat/server helpers in `BaseChatMesh`, the current request type v
 | `0x06` | get neighbors   | node neighbors query    |
 | `0x08` | subscribe   | subscribe to telemetry push    |
 | `0x09` | ubsubscribe   | unsubscribe from telemetry push    |
+| `0x0A` | get position | precise position request (companion) |
 
 #### Get stats
 
@@ -139,6 +140,13 @@ Gets information about the node, possibly including the following:
 | timestamp      | 4            | sender time (unix timestamp) |
 | req type       | 1            | 0x03 (request sub type)      |
 | permission mask  | 1          | bitwise inverse mask to AND to permissions (0 = get ALL telem values)   |
+
+#### Get Position
+
+| Field    | Size (bytes) | Description                  |
+|----------|--------------|------------------------------|
+| timestamp | 4           | sender time (unix timestamp) |
+| req type  | 1           | 0x0A (request sub type)      |
 
 #### Get Min/Max/Ave  (Sensor nodes)
 
@@ -193,6 +201,22 @@ Not defined in `BaseChatMesh`.
 | content | rest of payload | application-defined response body |
 
 Response contents are opaque application data. There is no single generic response envelope beyond the encrypted payload wrapper shown above.
+
+#### Position Response
+
+| Field          | Size (bytes) | Description                                              |
+|----------------|--------------|----------------------------------------------------------|
+| timestamp      | 4            | echoed sender timestamp (tag)                            |
+| flags          | 1            | bit 0: valid GPS fix; bit 1: altitude valid; rest zero   |
+| latitude       | 4            | int32, degrees × 1,000,000                                |
+| longitude      | 4            | int32, degrees × 1,000,000                                |
+| altitude       | 4            | int32, millimetres                                        |
+| satellites     | 1            | satellites used in the fix                                |
+| gps timestamp  | 4            | uint32, epoch seconds; 0 when unknown                     |
+
+Responses are sent only when the sender has location telemetry permission.
+If the node has no current GPS fix, flags are 0 and all position fields are
+zero.
 
 ### Plain text message
 
