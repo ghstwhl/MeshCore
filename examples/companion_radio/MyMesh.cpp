@@ -5,6 +5,7 @@
 #include <WiFi.h>
 #endif
 #include <Mesh.h>
+#include <helpers/PositionData.h>
 #include <helpers/TelemetryPermissions.h>
 
 #define CMD_APP_START                 1
@@ -676,6 +677,24 @@ uint8_t MyMesh::onContactRequest(const ContactInfo &contact, uint32_t sender_tim
       memcpy(&reply[4], telemetry.getBuffer(), tlen);
       return 4 + tlen;
     }
+  } else if (data[0] == REQ_TYPE_GET_POSITION) {
+    uint8_t loc_perm = resolveTelemetryPermission(
+        _prefs.telemetry_mode_loc == TELEM_MODE_ALLOW_ALL,
+        _prefs.telemetry_mode_loc == TELEM_MODE_ALLOW_FLAGS,
+        contact.flags >> 1, TELEM_PERM_LOCATION);
+    if (loc_perm == 0) return 0;
+
+    LocationProvider* loc = sensors.getLocationProvider();
+    bool fix = loc != NULL && loc->isValid();
+    PositionData pd = buildPositionData(
+        sender_timestamp, sensors.isLocationActive(), fix,
+        fix ? (int32_t)loc->getLatitude() : 0,
+        fix ? (int32_t)loc->getLongitude() : 0,
+        fix ? (int32_t)loc->getAltitude() : 0,
+        fix ? (int32_t)loc->satellitesCount() : 0,
+        fix ? (int64_t)loc->getTimestamp() : 0);
+    encodePositionData(reply, pd);
+    return POSITION_DATA_SIZE;
   } else if (_listener) {
     return _listener->onUnhandledRequest(contact, sender_timestamp, data, len, reply);
   }

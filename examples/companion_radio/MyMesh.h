@@ -74,6 +74,7 @@
 #define REQ_TYPE_GET_STATUS             0x01 // same as _GET_STATS
 #define REQ_TYPE_KEEP_ALIVE             0x02
 #define REQ_TYPE_GET_TELEMETRY_DATA     0x03
+#define REQ_TYPE_GET_POSITION           0x0A
 
 // Copied from simple_repeater
 #define CTL_TYPE_NODE_DISCOVER_REQ      0x80
