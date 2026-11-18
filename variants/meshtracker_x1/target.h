@@ -32,6 +32,7 @@ public:
   const char* getSettingValue(int i) const override;
   bool setSettingValue(const char* name, const char* value) override;
   LocationProvider* getLocationProvider() { return _nmea; }
+  bool isLocationActive() const override { return gps_active; }
 };
 
 #ifdef DISPLAY_CLASS

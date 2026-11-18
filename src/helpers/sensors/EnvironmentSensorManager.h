@@ -39,6 +39,7 @@ public:
   EnvironmentSensorManager(LocationProvider &location): _location(&location){};
   LocationProvider* getLocationProvider() { return _location; }
   bool isGPSDetected() const override { return gps_detected; }
+  bool isLocationActive() const override { return gps_active; }
   #else
   EnvironmentSensorManager(){};
   #endif
