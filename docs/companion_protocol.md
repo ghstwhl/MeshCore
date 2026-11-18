@@ -485,6 +485,12 @@ The contact's reply arrives as `PUSH_CODE_BINARY_RESPONSE` (0x8C):
 The companion matches the tag to its single pending binary request and
 forwards the same frame shape for unmatched responses.
 
+**Compatibility and errors**: `CMD_SEND_BINARY_REQ` requires companion firmware
+v1.10.0 or later; older firmware replies `PACKET_ERROR` (0x01) with
+`ERR_CODE_UNSUPPORTED_CMD` (1). Sending to an unknown contact returns
+`ERR_CODE_NOT_FOUND` (2), and a full packet pool returns
+`ERR_CODE_TABLE_FULL` (3).
+
 ---
 
 ## Channel Management

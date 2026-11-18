@@ -216,7 +216,8 @@ Response contents are opaque application data. There is no single generic respon
 
 Responses are sent only when the sender has location telemetry permission.
 If the node has no current GPS fix, flags are 0 and all position fields are
-zero.
+zero. Granting a contact location telemetry permission also grants access to
+this precise position response.
 
 ### Plain text message
 
