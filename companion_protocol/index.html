@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://meshcore-dev.github.io/meshcore/companion_protocol/">
       
       
-        <link rel="prev" href="../cli_commands/">
+        <link rel="prev" href="../companion_cli/">
       
       
         <link rel="next" href="../docs/">
@@ -261,6 +261,33 @@
     
   
     CLI Commands
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../companion_cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Companion CLI
   
 
     
@@ -588,6 +615,17 @@
     <span class="md-ellipsis">
       
         8. Get Battery and Storage
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#9-send-binary-request" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Send Binary Request
       
     </span>
   </a>
@@ -1490,6 +1528,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#9-send-binary-request" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        9. Send Binary Request
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2244,6 +2293,107 @@ Bytes 9 .. 8+data_len:  Payload
 </code></pre>
 <p><strong>Response</strong>: <code>PACKET_BATTERY</code> (0x0C) with battery millivolts and storage information</p>
 <hr />
+<h3 id="9-send-binary-request">9. Send Binary Request</h3>
+<p><strong>Purpose</strong>: Send opaque application request bytes to a stored contact.</p>
+<p><strong>Command <code>CMD_SEND_BINARY_REQ</code> (50)</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Size (bytes)</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>command</td>
+<td>1</td>
+<td>50</td>
+</tr>
+<tr>
+<td>public key</td>
+<td>32</td>
+<td>destination contact</td>
+</tr>
+<tr>
+<td>request</td>
+<td>rest</td>
+<td>application-defined bytes</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Reply <code>RESP_CODE_SENT</code> (6)</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Size (bytes)</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>code</td>
+<td>1</td>
+<td>6</td>
+</tr>
+<tr>
+<td>flood</td>
+<td>1</td>
+<td>0 = direct, 1 = flood</td>
+</tr>
+<tr>
+<td>tag</td>
+<td>4</td>
+<td>uint32, unique request tag</td>
+</tr>
+<tr>
+<td>est timeout</td>
+<td>4</td>
+<td>estimated response timeout, ms</td>
+</tr>
+</tbody>
+</table>
+<p>The contact's reply arrives as <code>PUSH_CODE_BINARY_RESPONSE</code> (0x8C):</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Size (bytes)</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>push code</td>
+<td>1</td>
+<td>0x8C</td>
+</tr>
+<tr>
+<td>reserved</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>tag</td>
+<td>4</td>
+<td>matches <code>RESP_CODE_SENT</code></td>
+</tr>
+<tr>
+<td>response</td>
+<td>rest</td>
+<td>application-defined response bytes</td>
+</tr>
+</tbody>
+</table>
+<p>The companion matches the tag to its single pending binary request and
+forwards the same frame shape for unmatched responses.</p>
+<p><strong>Compatibility and errors</strong>: <code>CMD_SEND_BINARY_REQ</code> requires companion firmware
+v1.10.0 or later; older firmware replies <code>PACKET_ERROR</code> (0x01) with
+<code>ERR_CODE_UNSUPPORTED_CMD</code> (1). Sending to an unknown contact returns
+<code>ERR_CODE_NOT_FOUND</code> (2), and a full packet pool returns
+<code>ERR_CODE_TABLE_FULL</code> (3).</p>
+<hr />
 <h2 id="channel-management">Channel Management</h2>
 <h3 id="channel-types">Channel Types</h3>
 <ol>
@@ -2540,6 +2690,11 @@ Bytes 11+: Message Text (UTF-8)
 <td>0x88</td>
 <td>PACKET_LOG_DATA</td>
 <td>RF log data (can be ignored)</td>
+</tr>
+<tr>
+<td>0x8C</td>
+<td>PACKET_BINARY_RESPONSE</td>
+<td>Binary request response</td>
 </tr>
 </tbody>
 </table>

@@ -280,6 +280,33 @@
   
   
     <li class="md-nav__item">
+      <a href="../companion_cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Companion CLI
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../companion_protocol/" class="md-nav__link">
         
   
@@ -619,6 +646,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#get-position" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Get Position
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#get-minmaxave-sensor-nodes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -697,6 +735,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Response">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#position-response" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Position Response
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1093,6 +1148,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#get-position" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Get Position
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#get-minmaxave-sensor-nodes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1171,6 +1237,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Response">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#position-response" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Position Response
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1669,6 +1752,11 @@
 <td>ubsubscribe</td>
 <td>unsubscribe from telemetry push</td>
 </tr>
+<tr>
+<td><code>0x0A</code></td>
+<td>get position</td>
+<td>precise position request (companion)</td>
+</tr>
 </tbody>
 </table>
 <h4 id="get-stats">Get stats</h4>
@@ -1717,6 +1805,28 @@
 <td>permission mask</td>
 <td>1</td>
 <td>bitwise inverse mask to AND to permissions (0 = get ALL telem values)</td>
+</tr>
+</tbody>
+</table>
+<h4 id="get-position">Get Position</h4>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Size (bytes)</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>timestamp</td>
+<td>4</td>
+<td>sender time (unix timestamp)</td>
+</tr>
+<tr>
+<td>req type</td>
+<td>1</td>
+<td>0x0A (request sub type)</td>
 </tr>
 </tbody>
 </table>
@@ -1875,6 +1985,57 @@
 </tbody>
 </table>
 <p>Response contents are opaque application data. There is no single generic response envelope beyond the encrypted payload wrapper shown above.</p>
+<h4 id="position-response">Position Response</h4>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Size (bytes)</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>timestamp</td>
+<td>4</td>
+<td>echoed sender timestamp (tag)</td>
+</tr>
+<tr>
+<td>flags</td>
+<td>1</td>
+<td>bit 0: valid GPS fix; bit 1: altitude valid; rest zero</td>
+</tr>
+<tr>
+<td>latitude</td>
+<td>4</td>
+<td>int32, degrees × 1,000,000</td>
+</tr>
+<tr>
+<td>longitude</td>
+<td>4</td>
+<td>int32, degrees × 1,000,000</td>
+</tr>
+<tr>
+<td>altitude</td>
+<td>4</td>
+<td>int32, millimetres</td>
+</tr>
+<tr>
+<td>satellites</td>
+<td>1</td>
+<td>satellites used in the fix</td>
+</tr>
+<tr>
+<td>gps timestamp</td>
+<td>4</td>
+<td>uint32, epoch seconds; 0 when unknown</td>
+</tr>
+</tbody>
+</table>
+<p>Responses are sent only when the sender has location telemetry permission.
+If the node has no current GPS fix, flags are 0 and all position fields are
+zero. Granting a contact location telemetry permission also grants access to
+this precise position response.</p>
 <h3 id="plain-text-message">Plain text message</h3>
 <table>
 <thead>
