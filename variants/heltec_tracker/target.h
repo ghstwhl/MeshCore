@@ -14,7 +14,6 @@
 #endif
 
 class HWTSensorManager : public SensorManager {
-  bool gps_active = false;
   LocationProvider * _location;
 
   void start_gps();
@@ -29,7 +28,7 @@ public:
   const char* getSettingValue(int i) const override;
   bool setSettingValue(const char* name, const char* value) override;
   LocationProvider* getLocationProvider() override { return _location; }
-  bool isLocationActive() const override { return gps_active; }
+  bool isLocationActive() const override { return _location != NULL && _location->isGpsOn(); }
 };
 
 extern HeltecV3Board board;

@@ -14,15 +14,18 @@
 #endif
 #include <helpers/sensors/LocationProvider.h>
 
+class NanoG2UltraGpsDriver;
+
 class NanoG2UltraSensorManager : public SensorManager {
-  bool gps_active = false;
   LocationProvider *_location;
+  NanoG2UltraGpsDriver *_gps_driver;
 
   void start_gps();
   void stop_gps();
 
 public:
-  NanoG2UltraSensorManager(LocationProvider &location) : _location(&location) {}
+  NanoG2UltraSensorManager(LocationProvider &location, NanoG2UltraGpsDriver &gps_driver)
+      : _location(&location), _gps_driver(&gps_driver) {}
   bool begin() override;
   bool querySensors(uint8_t requester_permissions, CayenneLPP &telemetry) override;
   void loop() override;
@@ -31,7 +34,7 @@ public:
   const char *getSettingValue(int i) const override;
   bool setSettingValue(const char *name, const char *value) override;
   LocationProvider* getLocationProvider() override { return _location; }
-  bool isLocationActive() const override { return gps_active; }
+  bool isLocationActive() const override { return _location != NULL && _location->isGpsOn(); }
 };
 
 extern NanoG2Ultra board;
@@ -46,4 +49,3 @@ extern MomentaryButton user_btn;
 
 bool radio_init();
 mesh::LocalIdentity radio_new_identity();
-

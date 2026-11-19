@@ -14,8 +14,6 @@
 #endif
 
 class ThinkNodeM1SensorManager : public SensorManager {
-  bool gps_active = false;
-  bool last_gps_switch_state = false;
   LocationProvider* _location;
 
   void start_gps();
@@ -23,7 +21,7 @@ class ThinkNodeM1SensorManager : public SensorManager {
 public:
   ThinkNodeM1SensorManager(LocationProvider &location): _location(&location) { }
   LocationProvider* getLocationProvider() override { return _location; }
-  bool isLocationActive() const override { return gps_active; }
+  bool isLocationActive() const override { return _location != NULL && _location->isGpsOn(); }
   bool begin() override;
   bool querySensors(uint8_t requester_permissions, CayenneLPP& telemetry) override;
   void loop() override;
@@ -41,8 +39,8 @@ extern ThinkNodeM1SensorManager sensors;
 #ifdef DISPLAY_CLASS
   extern DISPLAY_CLASS display;
   extern MomentaryButton user_btn;
+  extern MomentaryButton backlight_btn;
 #endif
 
 bool radio_init();
 mesh::LocalIdentity radio_new_identity();
-

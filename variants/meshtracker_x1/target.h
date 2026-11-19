@@ -14,13 +14,11 @@
 #endif
 
 class MeshTrackerX1SensorManager: public SensorManager {
-  bool gps_active = false;
   bool baro_ok = false;
   Adafruit_SPA06_003 spa06;
   LocationProvider * _nmea;
 
   void start_gps();
-  void sleep_gps();
   void stop_gps();
 public:
   MeshTrackerX1SensorManager(LocationProvider &nmea): _nmea(&nmea) { }
@@ -32,7 +30,7 @@ public:
   const char* getSettingValue(int i) const override;
   bool setSettingValue(const char* name, const char* value) override;
   LocationProvider* getLocationProvider() { return _nmea; }
-  bool isLocationActive() const override { return gps_active; }
+  bool isLocationActive() const override { return _nmea != NULL && _nmea->isGpsOn(); }
 };
 
 #ifdef DISPLAY_CLASS
