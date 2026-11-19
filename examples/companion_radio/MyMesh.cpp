@@ -5,6 +5,8 @@
 #include <WiFi.h>
 #endif
 #include <Mesh.h>
+#include <helpers/PositionData.h>
+#include <helpers/TelemetryPermissions.h>
 
 #define CMD_APP_START                 1
 #define CMD_SEND_TXT_MSG              2
@@ -639,26 +641,20 @@ void MyMesh::onChannelDataRecv(const mesh::GroupChannel &channel, mesh::Packet *
 uint8_t MyMesh::onContactRequest(const ContactInfo &contact, uint32_t sender_timestamp, const uint8_t *data,
                                  uint8_t len, uint8_t *reply) {
   if (data[0] == REQ_TYPE_GET_TELEMETRY_DATA) {
-    uint8_t permissions = 0;
     uint8_t cp = contact.flags >> 1; // LSB used as 'favourite' bit (so only use upper bits)
-
-    if (_prefs.telemetry_mode_base == TELEM_MODE_ALLOW_ALL) {
-      permissions = TELEM_PERM_BASE;
-    } else if (_prefs.telemetry_mode_base == TELEM_MODE_ALLOW_FLAGS) {
-      permissions = cp & TELEM_PERM_BASE;
-    }
-
-    if (_prefs.telemetry_mode_loc == TELEM_MODE_ALLOW_ALL) {
-      permissions |= TELEM_PERM_LOCATION;
-    } else if (_prefs.telemetry_mode_loc == TELEM_MODE_ALLOW_FLAGS) {
-      permissions |= cp & TELEM_PERM_LOCATION;
-    }
-
-    if (_prefs.telemetry_mode_env == TELEM_MODE_ALLOW_ALL) {
-      permissions |= TELEM_PERM_ENVIRONMENT;
-    } else if (_prefs.telemetry_mode_env == TELEM_MODE_ALLOW_FLAGS) {
-      permissions |= cp & TELEM_PERM_ENVIRONMENT;
-    }
+    uint8_t permissions = 0;
+    permissions |= resolveTelemetryPermission(
+        _prefs.telemetry_mode_base == TELEM_MODE_ALLOW_ALL,
+        _prefs.telemetry_mode_base == TELEM_MODE_ALLOW_FLAGS,
+        cp, TELEM_PERM_BASE);
+    permissions |= resolveTelemetryPermission(
+        _prefs.telemetry_mode_loc == TELEM_MODE_ALLOW_ALL,
+        _prefs.telemetry_mode_loc == TELEM_MODE_ALLOW_FLAGS,
+        cp, TELEM_PERM_LOCATION);
+    permissions |= resolveTelemetryPermission(
+        _prefs.telemetry_mode_env == TELEM_MODE_ALLOW_ALL,
+        _prefs.telemetry_mode_env == TELEM_MODE_ALLOW_FLAGS,
+        cp, TELEM_PERM_ENVIRONMENT);
 
     uint8_t perm_mask = ~(data[1]);    // NEW: first reserved byte (of 4), is now inverse mask to apply to permissions
     permissions &= perm_mask;
@@ -681,6 +677,24 @@ uint8_t MyMesh::onContactRequest(const ContactInfo &contact, uint32_t sender_tim
       memcpy(&reply[4], telemetry.getBuffer(), tlen);
       return 4 + tlen;
     }
+  } else if (data[0] == REQ_TYPE_GET_POSITION) {
+    uint8_t loc_perm = resolveTelemetryPermission(
+        _prefs.telemetry_mode_loc == TELEM_MODE_ALLOW_ALL,
+        _prefs.telemetry_mode_loc == TELEM_MODE_ALLOW_FLAGS,
+        contact.flags >> 1, TELEM_PERM_LOCATION);
+    if (loc_perm == 0) return 0;
+
+    LocationProvider* loc = sensors.getLocationProvider();
+    bool fix = loc != NULL && loc->isValid();
+    PositionData pd = buildPositionData(
+        sender_timestamp, sensors.isLocationActive(), fix,
+        fix ? (int32_t)loc->getLatitude() : 0,
+        fix ? (int32_t)loc->getLongitude() : 0,
+        fix ? (int32_t)loc->getAltitude() : 0,
+        fix ? (int32_t)loc->satellitesCount() : 0,
+        fix ? (int64_t)loc->getTimestamp() : 0);
+    encodePositionData(reply, pd);
+    return POSITION_DATA_SIZE;
   } else if (_listener) {
     return _listener->onUnhandledRequest(contact, sender_timestamp, data, len, reply);
   }

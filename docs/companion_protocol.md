@@ -452,6 +452,47 @@ Byte 0: 0x14
 
 ---
 
+### 9. Send Binary Request
+
+**Purpose**: Send opaque application request bytes to a stored contact.
+
+**Command `CMD_SEND_BINARY_REQ` (50)**:
+
+| Field      | Size (bytes) | Description                  |
+|------------|--------------|------------------------------|
+| command    | 1            | 50                           |
+| public key | 32           | destination contact          |
+| request    | rest         | application-defined bytes    |
+
+**Reply `RESP_CODE_SENT` (6)**:
+
+| Field       | Size (bytes) | Description                          |
+|-------------|--------------|--------------------------------------|
+| code        | 1            | 6                                    |
+| flood       | 1            | 0 = direct, 1 = flood                |
+| tag         | 4            | uint32, unique request tag           |
+| est timeout | 4            | estimated response timeout, ms       |
+
+The contact's reply arrives as `PUSH_CODE_BINARY_RESPONSE` (0x8C):
+
+| Field       | Size (bytes) | Description                          |
+|-------------|--------------|--------------------------------------|
+| push code   | 1            | 0x8C                                 |
+| reserved    | 1            | 0                                    |
+| tag         | 4            | matches `RESP_CODE_SENT`             |
+| response    | rest         | application-defined response bytes   |
+
+The companion matches the tag to its single pending binary request and
+forwards the same frame shape for unmatched responses.
+
+**Compatibility and errors**: `CMD_SEND_BINARY_REQ` requires companion firmware
+v1.10.0 or later; older firmware replies `PACKET_ERROR` (0x01) with
+`ERR_CODE_UNSUPPORTED_CMD` (1). Sending to an unknown contact returns
+`ERR_CODE_NOT_FOUND` (2), and a full packet pool returns
+`ERR_CODE_TABLE_FULL` (3).
+
+---
+
 ## Channel Management
 
 ### Channel Types
@@ -666,6 +707,7 @@ Byte values are authoritative; names are aliases. When reading firmware source, 
 | 0x82  | PACKET_ACK                 | Acknowledgment                |
 | 0x83  | PACKET_MESSAGES_WAITING    | Messages waiting notification |
 | 0x88  | PACKET_LOG_DATA            | RF log data (can be ignored)  |
+| 0x8C  | PACKET_BINARY_RESPONSE     | Binary request response       |
 
 ### Parsing Responses
 

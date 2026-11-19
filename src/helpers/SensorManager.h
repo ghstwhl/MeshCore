@@ -24,6 +24,10 @@ public:
   virtual bool setSettingValue(const char* name, const char* value) { return false; }
   virtual LocationProvider* getLocationProvider() { return NULL; }
   virtual bool isGPSDetected() const { return false; }
+  // True when the user's location setting is on and the provider is being
+  // serviced. Providers can retain their last fix after stop(), so callers
+  // must combine this with LocationProvider::isValid().
+  virtual bool isLocationActive() const { return false; }
 
   // Helper functions to manage setting by keys (useful in many places ...)
   const char* getSettingByKey(const char* key) {
